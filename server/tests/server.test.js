@@ -221,7 +221,7 @@ describe("POST /users", () => {
                     expect(user).toBeTruthy();
                     expect(user.password === password).toBeFalsy();
                     done();
-                })
+                }).catch(e => done(e))
             });
     })
 
@@ -247,4 +247,37 @@ describe("POST /users", () => {
                     .end(done);
             })
     })
+})
+
+describe("POST /user/login", () => {
+    it('should login user and return auth token', done => {
+        let {email, password, _id} = users[0];
+        request(app)
+            .post('/users/login')
+            .send({email, password})
+            .expect(200)
+            .expect(res => {
+                expect(res.header['x-auth']).toBeTruthy()
+            })
+            .end((err, res) => {
+                if (err) {
+                    return done(err)
+                }
+                User.findById(_id).then(user => {
+                    expect(user.tokens[0].access).toBe('auth');
+                    done()
+                }).catch(e => done(e))
+            })
+    })
+    it('should reject invalid login', done => {
+        let {email, id} = users[0];
+        let {password, } = users[1];
+        request(app)
+            .post('/users/login')
+            .send({email, password})
+            .expect(400)
+            .end(done)
+    })
+
+
 })
